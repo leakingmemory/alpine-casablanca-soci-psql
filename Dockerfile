@@ -1,8 +1,8 @@
-FROM leakingmemory/alpine-casablanca:build AS rundeps
+FROM leakingmemory/alpine-casablanca:build AS build-img-stage1
 RUN apk update
 RUN apk add libpq
 
-FROM rundeps AS builddeps
+FROM build-img-stage1 AS builddeps
 RUN apk add postgresql-dev
 RUN apk add g++ cmake ninja boost-static patch
 
@@ -17,9 +17,12 @@ RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DSOCI_LIBDIR=lib
 RUN ninja
 RUN ninja install
 
-FROM rundeps AS alpine-casablanca-soci-psql-runtime
+FROM leakingmemory/alpine-casablanca:runtime AS alpine-casablanca-soci-psql-runtime
+RUN apk update
+RUN apk add libpq
 COPY --from=build /usr/local/lib/libsoci*.so* /usr/local/lib/
 
-FROM alpine-casablanca-soci-psql-runtime AS alpine-casablanca-soci-psql-build
+FROM build-img-stage1 AS alpine-casablanca-soci-psql-build
+COPY --from=build /usr/local/lib/libsoci*.so* /usr/local/lib/
 COPY --from=build /usr/local/lib/libsoci*.a /usr/local/lib/
 COPY --from=build /usr/local/include/soci/ /usr/local/include/soci/
