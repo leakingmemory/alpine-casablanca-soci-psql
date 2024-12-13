@@ -7,12 +7,11 @@ RUN apk add postgresql-dev
 RUN apk add g++ cmake ninja boost-static patch
 
 FROM builddeps AS build
-RUN wget https://github.com/SOCI/soci/archive/3.2.3.tar.gz
-RUN tar xzvf 3.2.3.tar.gz
-COPY soci-libdir.patch /soci-libdir.patch
-RUN patch -p0 < soci-libdir.patch
-RUN mkdir soci-3.2.3/src/build
-WORKDIR soci-3.2.3/src/build
+ENV SOCI_VERSION=4.0.3
+RUN wget -O soci-${SOCI_VERSION}.tar.gz https://sourceforge.net/projects/soci/files/soci/soci-${SOCI_VERSION}/soci-${SOCI_VERSION}.tar.gz/download
+RUN tar xzvf soci-${SOCI_VERSION}.tar.gz
+RUN mkdir "soci-${SOCI_VERSION}/build"
+WORKDIR "soci-${SOCI_VERSION}/build"
 RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DSOCI_LIBDIR=lib
 RUN ninja
 RUN ninja install
